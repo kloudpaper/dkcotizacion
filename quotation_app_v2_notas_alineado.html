@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generador de Cotizaciones – Dikevi / Bruker (v2 · notas + logos alineados)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{ --border:#e5e7eb; }
+    body{ background:#f3f5f7; }
+    .page {
+      background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.08);
+      border:1px solid var(--border); padding:24px; margin:24px auto; max-width:1024px;
+    }
+    .doc-header {
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:2px solid var(--border); padding-bottom:12px; margin-bottom:16px;
+    }
+    .doc-header .left {
+      display:flex; align-items:center; gap:16px; flex-wrap:nowrap; white-space:nowrap;
+    }
+    .logo {
+      height:60px; max-height:60px; width:auto; object-fit:contain; display:inline-block;
+    }
+    .section-h { font-weight:600; margin-top:8px; padding:6px 10px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; }
+    .kv { display:grid; grid-template-columns: 160px 1fr; gap:6px 12px; }
+    .kv .k { color:#374151; font-weight:600; }
+    .items-table { width:100%; border-collapse:collapse; margin-top:8px; }
+    .items-table th, .items-table td{ border:1px solid var(--border); padding:6px 8px; vertical-align:top; }
+    .items-table th { background:#f8fafc; font-weight:600; }
+    .items-table .note-hint { font-size: 12px; color:#6b7280; }
+    .items-table .note-row textarea { height: 80px; }
+    .totals { display:grid; grid-template-columns: 1fr auto; margin-top:12px; }
+    .totals .table { width:320px; margin-left:auto; }
+    .fine { font-size:11.5px; color:#4b5563; }
+    .controls .btn{ margin-right:8px; }
+    .controls { position: sticky; top: 8px; z-index: 1020; } /* que no se pierdan al hacer scroll */
+    .quick-actions .btn { margin-right:6px; margin-top:6px; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body * { visibility: hidden !important; }
+      #preview, #preview * { visibility: visible !important; }
+      #preview { position:absolute; left:0; top:0; width:auto; max-width:none; box-shadow:none; border:none; margin:0; padding:0; }
+      .logo { height:60px; max-height:60px; } /* asegurar mismo tamaño también en impresión */
+      thead { display: table-header-group; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="m-0">Formulario de Cotización</h2>
+      <div class="controls hide-print">
+        <button id="btnAddSection" class="btn btn-outline-primary btn-sm">➕ Agregar sección</button>
+        <button id="btnAddItem" class="btn btn-outline-primary btn-sm">➕ Agregar item</button>
+        <button id="btnAddNote" class="btn btn-outline-secondary btn-sm">📝 Agregar nota (solo descripción)</button>
+        <button id="btnPrint" class="btn btn-primary btn-sm">🖨️ Imprimir / PDF</button>
+        <button id="btnEmail" class="btn btn-success btn-sm">✉️ Preparar correo</button>
+        <button id="btnReset" class="btn btn-outline-secondary btn-sm">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header bg-dark text-white">Encabezado – Dikevi Chimie Technologie</div>
+          <div class="card-body">
+            <div class="mb-2"><label class="form-label">Serie (auto):</label><input id="serie" class="form-control form-control-sm" placeholder="COT-YYYYMMDD-001"></div>
+            <div class="mb-2"><label class="form-label">Fecha:</label><input id="fecha" type="date" class="form-control form-control-sm"></div>
+            <div class="mb-2"><label class="form-label">Nombre del vendedor:</label><input id="vendedor" class="form-control form-control-sm" placeholder="Nombre del vendedor"></div>
+            <div class="mb-2">
+              <label class="form-label">Dirección de Dikevi:</label>
+              <textarea id="dirDikevi" class="form-control form-control-sm" rows="3">DCI230807930
+Sagitario 58, Prado Churubusco, 04230, Coyoacán, CDMX
+dikevichimie@gmail.com · contacto@dikevichimie.com</textarea>
+            </div>
+            <div class="mb-2">
+              <label class="form-label d-block">Moneda:</label>
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="currency" id="curMXN" autocomplete="off" checked>
+                <label class="btn btn-outline-primary btn-sm" for="curMXN">MXN</label>
+                <input type="radio" class="btn-check" name="currency" id="curUSD" autocomplete="off">
+                <label class="btn btn-outline-primary btn-sm" for="curUSD">USD</label>
+              </div>
+              <span class="ms-2 badge bg-light text-dark border">IVA 16% incluido</span>
+            </div>
+            <div class="mb-2 form-check"><input class="form-check-input" type="checkbox" id="showDikeviLogo" checked><label class="form-check-label" for="showDikeviLogo">Mostrar logo Dikevi</label></div>
+            <div class="mb-2 form-check"><input class="form-check-input" type="checkbox" id="showBrukerLogo" checked><label class="form-check-label" for="showBrukerLogo">Mostrar logo Bruker</label></div>
+            <div class="mb-2"><label class="form-label">URL Logo Dikevi</label><input id="logoDikevi" class="form-control form-control-sm" value="https://raw.githubusercontent.com/kloudpaper/dikevi-chimie/main/imagotipo4.png"></div>
+            <div class="mb-2"><label class="form-label">URL Logo Bruker</label><input id="logoBruker" class="form-control form-control-sm" value="https://raw.githubusercontent.com/kloudpaper/dikevi-chimie/main/Bruker%20Logo.jpg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header bg-dark text-white">Cliente / Destinatario</div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-sm-6"><label class="form-label">Empresa</label><input id="empresa" class="form-control form-control-sm" placeholder="Nombre legal de la empresa"></div>
+              <div class="col-sm-6"><label class="form-label">Atención a</label><input id="persona" class="form-control form-control-sm" placeholder="Nombre de la persona"></div>
+              <div class="col-12"><label class="form-label">Dirección de la empresa</label><input id="dirEmpresa" class="form-control form-control-sm" placeholder="Calle, número, colonia, CP, ciudad, estado"></div>
+              <div class="col-sm-6"><label class="form-label">Correo de la persona (catálogo)</label><input id="correoPersona" type="email" class="form-control form-control-sm" placeholder="correo@empresa.com"></div>
+              <div class="col-sm-6"><label class="form-label">Vigencia (días)</label><input id="vigencia" type="number" class="form-control form-control-sm" value="30"></div>
+            </div>
+            <!-- Acciones rápidas dentro del formulario para no desplazarse -->
+            <div class="quick-actions mt-2">
+              <span class="text-muted small me-2">Accesos rápidos:</span>
+              <button id="qaAddItem" class="btn btn-outline-primary btn-sm">➕ Agregar item</button>
+              <button id="qaAddNote" class="btn btn-outline-secondary btn-sm">📝 Agregar nota</button>
+              <button id="qaAddSection" class="btn btn-outline-primary btn-sm">➕ Agregar sección</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secciones e Items -->
+    <div class="card mt-4">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>Partidas de la cotización</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle m-0" id="itemsTable">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 22%;">Sección / Subtítulo</th>
+                <th style="width: 14%;">Código / N.P.</th>
+                <th>Descripción</th>
+                <th style="width: 8%;">Cant.</th>
+                <th style="width: 14%;">Precio unit.</th>
+                <th style="width: 12%;">Importe</th>
+                <th class="hide-print" style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW / DOCUMENTO -->
+    <div class="page preview mt-4" id="preview">
+      <div class="doc-header">
+        <div class="left">
+          <img id="pvLogoDikevi" class="logo" src="" alt="Dikevi" style="display:none">
+          <img id="pvLogoBruker" class="logo" src="" alt="Bruker" style="display:none">
+        </div>
+        <div class="doc-title">
+          <h1 class="mb-1">COTIZACIÓN</h1>
+          <div><span class="serial" id="pvSerie">COT-YYYYMMDD-001</span></div>
+          <small id="pvFecha">Fecha: —</small>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="section-h">Dikevi Chimie Technologie</div>
+          <div class="kv mt-2">
+            <div class="k">Datos:</div><div class="v" id="pvDirDikevi"></div>
+            <div class="k">Vendedor:</div><div class="v" id="pvVendedor"></div>
+            <div class="k">Moneda:</div><div class="v"><span class="badge bg-light text-dark border" id="pvMoneda">MXN</span></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="section-h">Cliente</div>
+          <div class="kv mt-2">
+            <div class="k">Empresa:</div><div class="v" id="pvEmpresa"></div>
+            <div class="k">Atención:</div><div class="v" id="pvPersona"></div>
+            <div class="k">Dirección:</div><div class="v" id="pvDirEmpresa"></div>
+            <div class="k">Correo:</div><div class="v" id="pvCorreoPersona"></div>
+            <div class="k">Vigencia:</div><div class="v"><span id="pvVigencia">30</span> días</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title fw-bold mt-3">Detalle</div>
+      <table class="items-table" id="pvTable">
+        <thead>
+          <tr>
+            <th style="width:22%;">Sección</th>
+            <th style="width:14%;">Código</th>
+            <th>Descripción</th>
+            <th style="width:8%;">Cant.</th>
+            <th style="width:14%;">Precio unit.</th>
+            <th style="width:12%;">Importe</th>
+          </tr>
+        </thead>
+        <tbody id="pvBody"></tbody>
+      </table>
+
+      <div class="totals">
+        <div></div>
+        <table class="table table-bordered w-auto mb-0">
+          <tbody>
+            <tr><th class="text-end">Sub-total</th><td class="text-end" id="pvSubtotal">$0.00</td></tr>
+            <tr><th class="text-end">IVA 16%</th><td class="text-end" id="pvIVA">$0.00</td></tr>
+            <tr><th class="text-end">Total</th><td class="text-end fw-bold" id="pvTotal">$0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="fine mt-2">
+        <div><strong>Condiciones:</strong> Las condiciones de pago son de acuerdo a Bruker y los términos de entrega también están sujetos a Bruker.</div>
+        <div class="mt-1"><strong>Bruker Mexicana, S.A. DE C.V. · Division BioSpin</strong></div>
+        <div>Calle Damas No. 130, 5 piso Oficina 501 · Col. San Jose Insurgentes · Del. Benito Juarez, C.P 03900 · Ciudad de México, México</div>
+        <div class="mt-1"><strong>Favor de pagar en BANK OF AMERICA:</strong>
+          Cuenta en U$ Dólares: Número 1257076169 · SWIFT BOFAUS3N · ABA 026 009 593<br>
+          Cuenta en M.N. Pesos: Número 14276018 · CLABE 106180000142760187 · SWIFT BOFAMXMX<br>
+          Nombre BANCO BAMSA · Localidad 01 · Código Banco 106
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const fmt = (n, cur) => new Intl.NumberFormat(cur==='USD'?'en-US':'es-MX', { style:'currency', currency: cur }).format(n || 0);
+    const E = encodeURIComponent;
+
+    function todayISO(){ const d=new Date(), tz=d.getTimezoneOffset()*60000; return new Date(Date.now()-tz).toISOString().slice(0,10); }
+    function genSerie(dateStr){ const key='quoteCounter-'+dateStr.replaceAll('-',''); const num=(parseInt(localStorage.getItem(key)||'0',10)+1); localStorage.setItem(key,String(num)); return 'COT-'+dateStr.replaceAll('-','')+'-'+String(num).padStart(3,'0'); }
+
+    const state = { currency: 'MXN', items: [] };
+
+    function init(){
+      const fecha=$('#fecha'); fecha.value=todayISO(); $('#serie').value=genSerie(fecha.value);
+      $('#pvLogoDikevi').src=$('#logoDikevi').value; $('#pvLogoBruker').src=$('#logoBruker').value;
+      bindEvents();
+      addItem(); addItem();
+      const v=localStorage.getItem('dk-vendedor'); if(v) $('#vendedor').value=v;
+      const cur=localStorage.getItem('dk-currency'); if(cur==='USD'){ $('#curUSD').checked=true; state.currency='USD'; }
+      render();
+    }
+
+    function bindEvents(){
+      // Top controls
+      $('#btnAddItem').addEventListener('click', e => { e.preventDefault(); addItem(); });
+      $('#btnAddNote').addEventListener('click', e => { e.preventDefault(); addNoteRow(); });
+      $('#btnAddSection').addEventListener('click', e => { e.preventDefault(); addSectionRow(); });
+      // Quick actions inside the form
+      $('#qaAddItem').addEventListener('click', e => { e.preventDefault(); addItem(); });
+      $('#qaAddNote').addEventListener('click', e => { e.preventDefault(); addNoteRow(); });
+      $('#qaAddSection').addEventListener('click', e => { e.preventDefault(); addSectionRow(); });
+
+      $('#btnPrint').addEventListener('click', () => window.print());
+      $('#btnReset').addEventListener('click', () => { if(confirm('¿Limpiar todo?')){ state.items = []; $('#itemsBody').innerHTML=''; addItem(); render(); } });
+      $('#btnEmail').addEventListener('click', prepEmail);
+      ['serie','fecha','vendedor','dirDikevi','empresa','persona','dirEmpresa','correoPersona','vigencia','logoDikevi','logoBruker','emailPara','emailCC','emailMsg']
+        .forEach(id => document.getElementById(id).addEventListener('input', render));
+      $('#curMXN').addEventListener('change', () => { state.currency='MXN'; localStorage.setItem('dk-currency','MXN'); render(); });
+      $('#curUSD').addEventListener('change', () => { state.currency='USD'; localStorage.setItem('dk-currency','USD'); render(); });
+      $('#vendedor').addEventListener('change', e => localStorage.setItem('dk-vendedor', e.target.value));
+      $('#showDikeviLogo').addEventListener('change', render);
+      $('#showBrukerLogo').addEventListener('change', render);
+    }
+
+    function addSectionRow(){
+      const tbody=$('#itemsBody');
+      const tr=document.createElement('tr'); tr.dataset.type='section';
+      tr.innerHTML=`
+        <td><input class="form-control form-control-sm" placeholder="Título de sección (p.ej. Preparación de muestra)"></td>
+        <td><input class="form-control form-control-sm" placeholder="—"></td>
+        <td><input class="form-control form-control-sm" placeholder="—"></td>
+        <td><input type="number" min="0" step="1" class="form-control form-control-sm" value="0"></td>
+        <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" value="0"></td>
+        <td class="text-end text-muted">—</td>
+        <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
+      tbody.appendChild(tr); wireRow(tr,'section'); render();
+    }
+
+    function addItem(){
+      const tbody=$('#itemsBody');
+      const tr=document.createElement('tr'); tr.dataset.type='item';
+      tr.innerHTML=`
+        <td><input class="form-control form-control-sm" placeholder="Sección / subtítulo"></td>
+        <td><input class="form-control form-control-sm" placeholder="Código / N.P."></td>
+        <td><textarea class="form-control form-control-sm" placeholder="Descripción del producto/servicio"></textarea></td>
+        <td><input type="number" min="1" step="1" class="form-control form-control-sm" value="1"></td>
+        <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" value="0"></td>
+        <td class="text-end fw-semibold">0</td>
+        <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
+      tbody.appendChild(tr); wireRow(tr,'item'); render();
+    }
+
+    function addNoteRow(){
+      const tbody=$('#itemsBody');
+      const tr=document.createElement('tr'); tr.dataset.type='note'; tr.classList.add('note-row');
+      tr.innerHTML=`
+        <td colspan="6">
+          <textarea class="form-control form-control-sm" placeholder="Nota / descripción extendida (no afecta totales)"></textarea>
+          <div class="note-hint">Se imprimirá debajo de la sección previa, abarcando desde la primera columna.</div>
+        </td>
+        <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
+      tbody.appendChild(tr); wireRow(tr,'note'); render();
+    }
+
+    function wireRow(tr,type){
+      const delBtnCell = tr.lastElementChild;
+      delBtnCell.firstElementChild.addEventListener('click', e => { e.preventDefault(); tr.remove(); render(); });
+      if(type==='note'){ tr.querySelector('textarea').addEventListener('input', render); return; }
+      const cells=tr.children; const [sec,code,desc,qty,unit,importe]=cells;
+      function onChange(){
+        const q=parseFloat(qty.firstElementChild.value||'0'); const u=parseFloat(unit.firstElementChild.value||'0');
+        importe.textContent = fmt((type==='section' && q===0)?0:(q*u), state.currency);
+        render();
+      }
+      [sec,code,desc,qty,unit].forEach(td => td.firstElementChild.addEventListener('input', onChange));
+    }
+
+    function collectItems(){
+      return Array.from(document.querySelectorAll('#itemsBody tr')).map(tr=>{
+        const type=tr.dataset.type||'item'; const cells=tr.children;
+        if(type==='note'){ return {type, desc:(cells[0].querySelector('textarea')?.value||'').trim()}; } /* textarea en la primera celda */
+        const [sec,code,desc,qty,unit]=cells;
+        return {
+          type, section: sec.firstElementChild.value.trim(),
+          code: code.firstElementChild.value.trim(),
+          desc: desc.firstElementChild.value.trim(),
+          qty: parseFloat(qty.firstElementChild.value||'0'),
+          unit: parseFloat(unit.firstElementChild.value||'0'),
+        };
+      });
+    }
+
+    function render(){
+      const showD=$('#showDikeviLogo').checked, showB=$('#showBrukerLogo').checked;
+      $('#pvLogoDikevi').style.display=showD?'inline-block':'none';
+      $('#pvLogoBruker').style.display=showB?'inline-block':'none';
+      $('#pvLogoDikevi').src=$('#logoDikevi').value||''; $('#pvLogoBruker').src=$('#logoBruker').value||'';
+      $('#pvSerie').textContent=$('#serie').value.trim()||'—';
+      $('#pvFecha').textContent='Fecha: '+($('#fecha').value||'—');
+      $('#pvDirDikevi').textContent=($('#dirDikevi').value||'').trim();
+      $('#pvVendedor').textContent=($('#vendedor').value||'').trim()||'—';
+      const cur=$('#curUSD').checked?'USD':'MXN'; state.currency=cur; $('#pvMoneda').textContent=cur;
+      $('#pvEmpresa').textContent=$('#empresa').value||'—';
+      $('#pvPersona').textContent=$('#persona').value||'—';
+      $('#pvDirEmpresa').textContent=$('#dirEmpresa').value||'—';
+      $('#pvCorreoPersona').textContent=$('#correoPersona').value||'—';
+      $('#pvVigencia').textContent=$('#vigencia').value||'30';
+
+      const items=collectItems(); state.items=items;
+      const tb=$('#pvBody'); tb.innerHTML=''; let subtotal=0;
+      items.forEach(it=>{
+        if(it.type==='note'){
+          if(!it.desc) return;
+          const ntr=document.createElement('tr');
+          ntr.innerHTML=`<td colspan="6">${it.desc.replace(/\\n/g,'<br>')}</td>`; /* ocupa desde la primera columna */
+          tb.appendChild(ntr); return;
+        }
+        const imp=(it.qty*it.unit)||0; subtotal+=imp;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${it.section||''}</td>
+          <td>${it.code||''}</td>
+          <td>${(it.desc||'').replace(/\\n/g,'<br>')}</td>
+          <td class="text-end">${it.qty||0}</td>
+          <td class="text-end">${fmt(it.unit, cur)}</td>
+          <td class="text-end">${fmt(imp, cur)}</td>`;
+        tb.appendChild(tr);
+      });
+      const iva=subtotal*0.16, total=subtotal+iva;
+      $('#pvSubtotal').textContent=fmt(subtotal, cur); $('#pvIVA').textContent=fmt(iva, cur); $('#pvTotal').textContent=fmt(total, cur);
+    }
+
+    function prepEmail(){
+      render();
+      const para = ($('#emailPara')?.value||'').trim() || ($('#correoPersona')?.value||'').trim();
+      const ccRaw = ($('#emailCC')?.value||'').trim(); const cc=ccRaw.replace(/\\s+/g,'').replace(/;+/g,',');
+      const empresa=$('#empresa').value.trim(); const persona=$('#persona').value.trim();
+      const serie=$('#serie').value.trim(); const cur=state.currency; const total=$('#pvTotal').textContent;
+      const vig=$('#vigencia').value.trim()||'30'; const msg=$('#emailMsg')?.value?.trim()||''; const dir=$('#dirDikevi').value.trim();
+      if(!para){ alert('Indica un correo de destino en “Para (email)” o llena “Correo de la persona”.'); return; }
+      const subject=\`Cotización \${serie}\${empresa? ' – '+empresa : ''}\`;
+      const saludo= persona ? \`Estimad@ \${persona},\` : 'Estimad@,';
+      const body=\`\${saludo}
+
+Te comparto la cotización \${serie} con vigencia de \${vig} días.
+Total: \${total} (\${cur})
+
+\${msg ? msg + '\\n\\n' : ''}Datos de Dikevi:
+\${dir}
+
+Condiciones: Las condiciones de pago son de acuerdo a Bruker y los términos de entrega también están sujetos a Bruker.
+
+*Adjunta el PDF generado desde “Imprimir / PDF”.\`;
+      let url='mailto:'+E(para)+'?subject='+E(subject)+'&body='+E(body); if(cc){ url+='&cc='+E(cc); } window.location.href=url;
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+\documentclass[12pt,spanish]{scrartcl}
+% === Plantilla mínima para cotización Dikevi/Bruker ===
+\usepackage[margin=12mm]{geometry}
+\usepackage{babel}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{siunitx}
+\sisetup{group-separator = {\,}, group-minimum-digits=4, output-decimal-marker = {.}}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Rellenar con sus datos ---
+\newcommand{\Serie}{COT-YYYYMMDD-001}
+\newcommand{\Fecha}{20259-4} % Correct dash length using \textendash
+% \newcommand{\Fecha}{2025\textendash09\textendash14}
+\newcommand{\Moneda}{MXN}
+\newcommand{\Vendedor}{Nombre del vendedor}
+\newcommand{\DirDikevi}{DCI230807930\\ Sagitario 58, Prado Churubusco, 04230, Coyoacán, CDMX\\ dikevichimie@gmail.com \textperiodcentered\ contacto@dikevichimie.com}
+\newcommand{\Empresa}{Empresa S.A. de C.V.}
+\newcommand{\Persona}{Nombre Apellido}
+\newcommand{\DirEmpresa}{Calle, número, colonia, CP, ciudad, estado}
+\newcommand{\CorreoPersona}{correo@empresa.com}
+\newcommand{\Vigencia}{30}
+
+\begin{document}\thispagestyle{empty}
+{\Large\textbf{COTIZACIÓN}} \hfill \texttt{\Serie}\\
+Fecha: \Fecha\par\vspace{1ex}
+
+\noindent\begin{tabularx}{\textwidth}{@{}lX@{}}
+\textbf{Dikevi Chimie Technologie} & \\
+Datos & \DirDikevi \\
+Vendedor & \Vendedor \\
+Moneda & \Moneda \\
+\end{tabularx}
+
+\vspace{1ex}
+\noindent\begin{tabularx}{\textwidth}{@{}lX@{}}
+\textbf{Cliente} & \\
+Empresa & \Empresa \\
+Atención & \Persona \\
+Dirección & \DirEmpresa \\
+Correo & \CorreoPersona \\
+Vigencia & \Vigencia\ días \\
+\end{tabularx}
+
+\vspace{1.5ex}
+\noindent\begin{tabularx}{\textwidth}{@{}p{0.20\textwidth}p{0.16\textwidth}X>{\raggedleft\arraybackslash}p{0.08\textwidth}>{\raggedleft\arraybackslash}p{0.14\textwidth}>{\raggedleft\arraybackslash}p{0.12\textwidth}@{}}
+\toprule
+\textbf{Sección} & \textbf{Código} & \textbf{Descripción} & \textbf{Cant.} & \textbf{Precio} & \textbf{Importe} \\
+\midrule
+% --- Ejemplos de filas; duplique/edite según convenga ---
+Equipo principal & ABC-123 & Espectrómetro NMR 400 MHz & 1 & 100000.00 & 100000.00\\
+Accesorios & XYZ-001 & Juego de sondas & 1 & 15000.00 & 15000.00\\
+Preparación de muestra & --- & Consumibles iniciales & 1 & 2500.00 & 2500.00\\
+\bottomrule
+\end{tabularx}
+
+\vspace{1ex}
+\noindent\begin{tabular}{@{}lr@{}}
+Sub-total: & 117500.00 \\
+IVA 16\%: & 18800.00 \\
+\textbf{Total:} & \textbf{136300.00} \\
+\end{tabular}
+
+\vspace{2ex}
+\noindent\textbf{Condiciones:} Las condiciones de pago son de acuerdo a Bruker y los términos de entrega también están sujetos a Bruker.
+
+\vspace{1ex}\footnotesize
+\noindent\textbf{Bruker Mexicana, S.A. DE C.V. · Division BioSpin}\\
+Calle Damas No. 130, 5 piso Oficina 501 · Col. San Jose Insurgentes · Del. Benito Juarez, C.P 03900 · Ciudad de México, México\\[0.5ex]
+\textbf{Favor de pagar en BANK OF AMERICA:} Cuenta en U\$ Dólares: Número 1257076169 · SWIFT BOFAUS3N · ABA 026 009 593\\
+Cuenta en M.N. Pesos: Número 14276018 · CLABE 106180000142760187 · SWIFT BOFAMXMX\\
+Nombre BANCO BAMSA · Localidad 01 · Código Banco 106
+
+\vfill\noindent\scriptsize Generado para Dikevi/Bruker.
+\end{document}
