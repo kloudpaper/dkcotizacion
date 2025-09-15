@@ -3,10 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Generador de Cotizaciones – Dikevi / Bruker (v2 · notas + logos alineados)</title>
+  <title>Generador de Cotizaciones – Dikevi / Bruker (v2 · slider logos + nota extendida)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root{ --border:#e5e7eb; }
+    :root{
+      --border:#e5e7eb;
+      --logo-h: 60px; /* controlado por el deslizador */
+    }
     body{ background:#f3f5f7; }
     .page {
       background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.08);
@@ -16,9 +19,9 @@
       display:flex; align-items:center; justify-content:space-between;
       border-bottom:2px solid var(--border); padding-bottom:12px; margin-bottom:16px;
     }
-    /* Logos más grandes y alineados en la misma fila */
+    /* Logos alineados en la misma fila y con altura variable */
     .doc-header .left{ display:flex; align-items:center; gap:16px; flex-wrap:nowrap; white-space:nowrap; }
-    .logo{ height:60px; max-height:60px; width:auto; object-fit:contain; display:inline-block; }
+    .logo{ height: var(--logo-h); max-height: var(--logo-h); width:auto; object-fit:contain; display:inline-block; }
 
     .section-h { font-weight:600; margin-top:8px; padding:6px 10px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; }
     .kv { display:grid; grid-template-columns: 160px 1fr; gap:6px 12px; }
@@ -39,9 +42,7 @@
       body * { visibility: hidden !important; }
       #preview, #preview * { visibility: visible !important; }
       #preview { position:absolute; left:0; top:0; width:auto; max-width:none; box-shadow:none; border:none; margin:0; padding:0; }
-      /* asegurar que sigan alineados / mismo tamaño en impresión */
-      .logo{ height:60px; max-height:60px; }
-      .doc-header .left{ display:flex; align-items:center; gap:16px; }
+      /* SIN override de .logo: respetará --logo-h elegida por el usuario */
       thead { display: table-header-group; }
       tr { page-break-inside: avoid; }
     }
@@ -71,9 +72,9 @@
             <div class="mb-2"><label class="form-label">Nombre del vendedor:</label><input id="vendedor" class="form-control form-control-sm" placeholder="Nombre del vendedor"></div>
             <div class="mb-2">
               <label class="form-label">Dirección de Dikevi:</label>
-              <textarea id="dirDikevi" class="form-control form-control-sm" rows="4">DCI230807930
+              <textarea id="dirDikevi" class="form-control form-control-sm" rows="3">DCI230807930
 Sagitario 58, Prado Churubusco, 04230, Coyoacán, CDMX
-contacto@dikevichimie.com</textarea>
+dikevichimie@gmail.com · contacto@dikevichimie.com</textarea>
             </div>
             <div class="mb-2">
               <label class="form-label d-block">Moneda:</label>
@@ -85,15 +86,28 @@ contacto@dikevichimie.com</textarea>
               </div>
               <span class="ms-2 badge bg-light text-dark border">IVA 16% incluido</span>
             </div>
+
             <div class="mb-2 form-check"><input class="form-check-input" type="checkbox" id="showDikeviLogo" checked><label class="form-check-label" for="showDikeviLogo">Mostrar logo Dikevi</label></div>
             <div class="mb-2 form-check"><input class="form-check-input" type="checkbox" id="showBrukerLogo" checked><label class="form-check-label" for="showBrukerLogo">Mostrar logo Bruker</label></div>
             <div class="mb-2"><label class="form-label">URL Logo Dikevi</label><input id="logoDikevi" class="form-control form-control-sm" value="https://raw.githubusercontent.com/kloudpaper/dikevi-chimie/main/imagotipo4.png"></div>
             <div class="mb-2"><label class="form-label">URL Logo Bruker</label><input id="logoBruker" class="form-control form-control-sm" value="https://raw.githubusercontent.com/kloudpaper/dikevi-chimie/main/Bruker%20Logo.jpg"></div>
+
+            <!-- Deslizador de tamaño de logos -->
+            <div class="mt-3">
+              <label class="form-label">Tamaño de logos</label>
+              <div class="d-flex align-items-center flex-wrap gap-2">
+                <input id="logoSize" type="range" min="40" max="120" step="2" value="60" class="form-range" style="width:260px;">
+                <input id="logoSizeNum" type="number" min="40" max="120" step="2" value="60" class="form-control form-control-sm" style="width:90px;">
+                <span class="text-muted small" id="logoSizeLabel">60 px</span>
+                <button id="logoSizeReset" class="btn btn-link btn-sm">Restablecer</button>
+              </div>
+              <div class="form-text">Este tamaño se aplica en pantalla y también al imprimir PDF.</div>
+            </div>
+
           </div>
         </div>
       </div>
 
-      
       <div class="col-lg-7">
         <div class="card">
           <div class="card-header bg-dark text-white">Cliente / Destinatario</div>
@@ -101,7 +115,7 @@ contacto@dikevichimie.com</textarea>
             <div class="row g-2">
               <div class="col-sm-6"><label class="form-label">Empresa</label><input id="empresa" class="form-control form-control-sm" placeholder="Nombre legal de la empresa"></div>
               <div class="col-sm-6"><label class="form-label">Atención a</label><input id="persona" class="form-control form-control-sm" placeholder="Nombre de la persona"></div>
-              <div class="col-12"><label class="form-label"><textarea id="dirEmpresa" class="form-control form-control-sm" rows="4">Dirección de la empresa</textarea></label><input id="dirEmpresa" class="form-control form-control-sm" placeholder="Calle, número, colonia, CP, ciudad, estado"></div>
+              <div class="col-12"><label class="form-label">Dirección de la empresa</label><input id="dirEmpresa" class="form-control form-control-sm" placeholder="Calle, número, colonia, CP, ciudad, estado"></div>
               <div class="col-sm-6"><label class="form-label">Correo de la persona (catálogo)</label><input id="correoPersona" type="email" class="form-control form-control-sm" placeholder="correo@empresa.com"></div>
               <div class="col-sm-6"><label class="form-label">Vigencia (días)</label><input id="vigencia" type="number" class="form-control form-control-sm" value="30"></div>
             </div>
@@ -230,6 +244,10 @@ contacto@dikevichimie.com</textarea>
     function init(){
       const fecha=$('#fecha'); fecha.value=todayISO(); $('#serie').value=genSerie(fecha.value);
       $('#pvLogoDikevi').src=$('#logoDikevi').value; $('#pvLogoBruker').src=$('#logoBruker').value;
+      // slider logos: inicializar desde localStorage o default
+      const savedH = parseInt(localStorage.getItem('dk-logo-h')||'60',10);
+      setLogoH(isFinite(savedH) ? Math.min(120, Math.max(40, savedH)) : 60);
+
       bindEvents();
       addItem(); addItem();
       const v=localStorage.getItem('dk-vendedor'); if(v) $('#vendedor').value=v;
@@ -237,31 +255,54 @@ contacto@dikevichimie.com</textarea>
       render();
     }
 
-    function bindEvents(){
-      const onInputIds = ['serie','fecha','vendedor','dirDikevi','empresa','persona','dirEmpresa','correoPersona','vigencia','logoDikevi','logoBruker','emailPara','emailCC','emailMsg'];
-      onInputIds.forEach(id => { const el=document.getElementById(id); if(el) el.addEventListener('input', render); });
-
-      const curMXN=$('#curMXN'), curUSD=$('#curUSD');
-      if(curMXN) curMXN.addEventListener('change', () => { state.currency='MXN'; localStorage.setItem('dk-currency','MXN'); render(); });
-      if(curUSD) curUSD.addEventListener('change', () => { state.currency='USD'; localStorage.setItem('dk-currency','USD'); render(); });
-
-      const v=$('#vendedor'); if(v) v.addEventListener('change', e => localStorage.setItem('dk-vendedor', e.target.value));
-
-      const sd=$('#showDikeviLogo'), sb=$('#showBrukerLogo');
-      if(sd) sd.addEventListener('change', render);
-      if(sb) sb.addEventListener('change', render);
-
-      const bAddItem=$('#btnAddItem'), bAddNote=$('#btnAddNote'), bAddSec=$('#btnAddSection');
-      if(bAddItem) bAddItem.addEventListener('click', e => { e.preventDefault(); addItem(); });
-      if(bAddNote) bAddNote.addEventListener('click', e => { e.preventDefault(); addNoteRow(); });
-      if(bAddSec)  bAddSec.addEventListener('click',  e => { e.preventDefault(); addSectionRow(); });
-
-      const bPrint=$('#btnPrint'), bReset=$('#btnReset'), bEmail=$('#btnEmail');
-      if(bPrint) bPrint.addEventListener('click', () => window.print());
-      if(bReset) bReset.addEventListener('click', () => { if(confirm('¿Limpiar todo?')){ state.items = []; $('#itemsBody').innerHTML=''; addItem(); render(); } });
-      if(bEmail) bEmail.addEventListener('click', prepEmail);
+    // ---- Logo size controls ----
+    function setLogoH(px){
+      const clamped = Math.min(120, Math.max(40, parseInt(px||60,10)));
+      document.documentElement.style.setProperty('--logo-h', clamped + 'px');
+      const r = $('#logoSize'), n = $('#logoSizeNum'), lab = $('#logoSizeLabel');
+      if(r) r.value = clamped;
+      if(n) n.value = clamped;
+      if(lab) lab.textContent = clamped + ' px';
+      localStorage.setItem('dk-logo-h', String(clamped));
     }
 
+    function bindLogoSizeEvents(){
+      const r = $('#logoSize'), n = $('#logoSizeNum'), reset = $('#logoSizeReset');
+      if(r) r.addEventListener('input', e => setLogoH(e.target.value));
+      if(n) n.addEventListener('input', e => setLogoH(e.target.value));
+      if(reset) reset.addEventListener('click', e => { e.preventDefault(); setLogoH(60); });
+    }
+
+    // ---------- Eventos ----------
+    function bindEvents(){
+      // botones
+      $('#btnAddItem').addEventListener('click', e => { e.preventDefault(); addItem(); });
+      $('#btnAddNote').addEventListener('click', e => { e.preventDefault(); addNoteRow(); });
+      $('#btnAddSection').addEventListener('click', e => { e.preventDefault(); addSectionRow(); });
+      $('#btnPrint').addEventListener('click', () => window.print());
+      $('#btnReset').addEventListener('click', () => { if(confirm('¿Limpiar todo?')){ state.items = []; $('#itemsBody').innerHTML=''; addItem(); render(); } });
+      $('#btnEmail').addEventListener('click', prepEmail);
+
+      // inputs que impactan preview
+      ['serie','fecha','vendedor','dirDikevi','empresa','persona','dirEmpresa','correoPersona','vigencia','logoDikevi','logoBruker','emailPara','emailCC','emailMsg']
+        .forEach(id => { const el=document.getElementById(id); if(el) el.addEventListener('input', render) });
+
+      // moneda
+      $('#curMXN').addEventListener('change', () => { state.currency='MXN'; localStorage.setItem('dk-currency','MXN'); render(); });
+      $('#curUSD').addEventListener('change', () => { state.currency='USD'; localStorage.setItem('dk-currency','USD'); render(); });
+
+      // persistir vendedor
+      $('#vendedor').addEventListener('change', e => localStorage.setItem('dk-vendedor', e.target.value));
+
+      // toggles logos
+      $('#showDikeviLogo').addEventListener('change', render);
+      $('#showBrukerLogo').addEventListener('change', render);
+
+      // eventos del slider
+      bindLogoSizeEvents();
+    }
+
+    // ---------- Filas ----------
     function addSectionRow(){
       const tbody=$('#itemsBody');
       const tr=document.createElement('tr'); tr.dataset.type='section';
@@ -273,7 +314,8 @@ contacto@dikevichimie.com</textarea>
         <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" value="0"></td>
         <td class="text-end text-muted">—</td>
         <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
-      tbody.appendChild(tr); wireRow(tr,'section'); render();
+      tbody.appendChild(tr);
+      wireRow(tr,'section'); render();
     }
 
     function addItem(){
@@ -287,7 +329,8 @@ contacto@dikevichimie.com</textarea>
         <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" value="0"></td>
         <td class="text-end fw-semibold">0</td>
         <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
-      tbody.appendChild(tr); wireRow(tr,'item'); render();
+      tbody.appendChild(tr);
+      wireRow(tr,'item'); render();
     }
 
     function addNoteRow(){
@@ -300,13 +343,13 @@ contacto@dikevichimie.com</textarea>
           <div class="note-hint">Se imprimirá debajo de la sección previa, abarcando desde la primera columna.</div>
         </td>
         <td class="hide-print"><button class="btn btn-sm btn-outline-danger">✕</button></td>`;
-      tbody.appendChild(tr); wireRow(tr,'note'); render();
+      tbody.appendChild(tr);
+      wireRow(tr,'note'); render();
     }
 
     function wireRow(tr,type){
       const delBtnCell = tr.lastElementChild;
       delBtnCell.firstElementChild.addEventListener('click', e => { e.preventDefault(); tr.remove(); render(); });
-
       if(type==='note'){
         tr.querySelector('textarea').addEventListener('input', render);
         return;
@@ -320,6 +363,7 @@ contacto@dikevichimie.com</textarea>
       [sec,code,desc,qty,unit].forEach(td => td.firstElementChild.addEventListener('input', onChange));
     }
 
+    // ---------- Render ----------
     function collectItems(){
       return Array.from(document.querySelectorAll('#itemsBody tr')).map(tr=>{
         const type=tr.dataset.type||'item'; const cells=tr.children;
@@ -336,21 +380,29 @@ contacto@dikevichimie.com</textarea>
     }
 
     function render(){
+      // Mostrar / ocultar logos y rutas
       const showD=$('#showDikeviLogo').checked, showB=$('#showBrukerLogo').checked;
       $('#pvLogoDikevi').style.display=showD?'inline-block':'none';
       $('#pvLogoBruker').style.display=showB?'inline-block':'none';
       $('#pvLogoDikevi').src=$('#logoDikevi').value||''; $('#pvLogoBruker').src=$('#logoBruker').value||'';
+
+      // Header
       $('#pvSerie').textContent=$('#serie').value.trim()||'—';
       $('#pvFecha').textContent='Fecha: '+($('#fecha').value||'—');
       $('#pvDirDikevi').textContent=($('#dirDikevi').value||'').trim();
       $('#pvVendedor').textContent=($('#vendedor').value||'').trim()||'—';
+
+      // Moneda
       const cur=$('#curUSD').checked?'USD':'MXN'; state.currency=cur; $('#pvMoneda').textContent=cur;
+
+      // Cliente
       $('#pvEmpresa').textContent=$('#empresa').value||'—';
       $('#pvPersona').textContent=$('#persona').value||'—';
       $('#pvDirEmpresa').textContent=$('#dirEmpresa').value||'—';
       $('#pvCorreoPersona').textContent=$('#correoPersona').value||'—';
       $('#pvVigencia').textContent=$('#vigencia').value||'30';
 
+      // Items
       const items=collectItems(); state.items=items;
       const tb=$('#pvBody'); tb.innerHTML=''; let subtotal=0;
       items.forEach(it=>{
@@ -375,6 +427,7 @@ contacto@dikevichimie.com</textarea>
       $('#pvSubtotal').textContent=fmt(subtotal, cur); $('#pvIVA').textContent=fmt(iva, cur); $('#pvTotal').textContent=fmt(total, cur);
     }
 
+    // ---------- Correo ----------
     function prepEmail(){
       render();
       const para = ($('#emailPara')?.value||'').trim() || ($('#correoPersona')?.value||'').trim();
@@ -396,9 +449,12 @@ ${dir}
 Condiciones: Las condiciones de pago son de acuerdo a Bruker y los términos de entrega también están sujetos a Bruker.
 
 *Adjunta el PDF generado desde “Imprimir / PDF”.`;
-      let url='mailto:'+E(para)+'?subject='+E(subject)+'&body='+E(body); if(cc){ url+='&cc='+E(cc); } window.location.href=url;
+      let url='mailto:'+encodeURIComponent(para)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+      if(cc){ url+='&cc='+encodeURIComponent(cc); }
+      window.location.href=url;
     }
 
+    // Go!
     init();
   </script>
 </body>
